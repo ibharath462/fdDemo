@@ -1,9 +1,13 @@
 package f1nd.initial.bharath.osdictdemo1;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
@@ -36,6 +40,8 @@ public class serviceHandler extends Service {
     private WindowManager wm;
     TextView m;
     EditText w = null;
+    SharedPreferences prefs = null;
+    String word;
     boolean meaningFlag = false;
     WindowManager.LayoutParams p;
     View myView;
@@ -52,63 +58,79 @@ public class serviceHandler extends Service {
 
             ClipData clipData = clipBoard.getPrimaryClip();
             ClipData.Item item = clipData.getItemAt(0);
-            String word = item.getText().toString();
+            word = item.getText().toString();
             word = word.trim();
-            int wordLength = 0;
-            if (!word.isEmpty())
-                wordLength = word.split("\\s+").length;
-            Log.d("Database22", "ML" + wordLength);
-            //Checking of we neeed a sentence parser
-            if(wordLength == 1){
-                //Single word...
-            }else{
-                //Need a parser pie...
-            }
-            databaseHelper=new data(serviceHandler.this);
-            word = word.toLowerCase();
-            word = word.substring(0, 1).toUpperCase() + word.substring(1);
-            String meaning = databaseHelper.getMeaning(word);
-            if(meaning != null){
-                meaning = meaning.replaceAll("^ +| +$|( )+", " ");
-                meaning = meaning.replace("\n", "").replace("\r", "");
-                int meaningLength = 0;
-                meaningLength = meaning.split("\\s+").length;
-                Log.d("Database22", "ML" + meaningLength);
-                //Checking if we need a popUp of make a Toast....
-                if(meaningLength < 15){
-                    //We can toast it...
-                    Log.d("Database22", "Can finish in Toast");
-                    Toast.makeText(getApplicationContext(),"" + meaning,Toast.LENGTH_LONG).show();
-                }else{
-                    //Need a popUp baby.....
-                    Log.d("Database22", "Need a popup baby....");
-                    w = (EditText) myView.findViewById(R.id.word);
-                    m = (TextView)myView.findViewById(R.id.meaning);
-                    mainFAB = (FloatingActionButton)myView.findViewById(R.id.mainFAB);
-                    close = (FloatingActionButton)myView.findViewById(R.id.c);
-                    hide = (FloatingActionButton)myView.findViewById(R.id.hide);
-
-                    close.setVisibility(View.VISIBLE);
-                    mainFAB.setVisibility(View.VISIBLE);
-                    hide.setVisibility(View.VISIBLE);
-                    lv.setVisibility(View.INVISIBLE);
-
-                    setListeners();
-
-                    m.setText(meaning);
-                    m.setVisibility(View.VISIBLE);
-                    w.setEnabled(false);
-                    w.setTextSize(28);
-                    w.setText(word);
-                    wm.addView(myView, p);
-                }
-            }
-            else{
-                Log.d("Database22", "Word not found hai...");
-                Toast.makeText(getApplicationContext(),"Word not found",Toast.LENGTH_SHORT).show();
-            }
+            getMeaning(null);
         }
     };
+
+    public void popUp(){
+
+        w = (EditText) myView.findViewById(R.id.word);
+        m = (TextView)myView.findViewById(R.id.meaning);
+        mainFAB = (FloatingActionButton)myView.findViewById(R.id.mainFAB);
+        close = (FloatingActionButton)myView.findViewById(R.id.c);
+        hide = (FloatingActionButton)myView.findViewById(R.id.hide);
+
+        close.setVisibility(View.VISIBLE);
+        mainFAB.setVisibility(View.VISIBLE);
+        hide.setVisibility(View.VISIBLE);
+        lv.setVisibility(View.INVISIBLE);
+
+    }
+
+    public void getMeaning(String sParsed){
+
+        if(sParsed != null){
+            word = sParsed;
+        }
+
+        int wordLength = 0;
+        if (!word.isEmpty())
+            wordLength = word.split("\\s+").length;
+        Log.d("Database22", "ML" + wordLength);
+        //Checking of we neeed a sentence parser
+        if(wordLength == 1){
+            //Single word...
+        }else{
+            //Need a parser pie...
+        }
+        databaseHelper=new data(serviceHandler.this);
+        //word = word.toLowerCase();
+        //word = word.substring(0, 1).toUpperCase() + word.substring(1);
+        String meaning = databaseHelper.getMeaning(word.toUpperCase());
+        if(meaning != null){
+            meaning = meaning.replaceAll("^ +| +$|( )+", " ");
+            meaning = meaning.replace("\n", "").replace("\r", "");
+            int meaningLength = 0;
+            meaningLength = meaning.split("\\s+").length;
+            Log.d("Database22", "ML" + meaningLength);
+            //Checking if we need a popUp of make a Toast....
+            if(meaningLength < 15){
+                //We can toast it...
+                Log.d("Database22", "Can finish in Toast");
+                Toast.makeText(getApplicationContext(),"" + meaning,Toast.LENGTH_LONG).show();
+            }else{
+                //Need a popUp baby.....
+                Log.d("Database22", "Need a popup baby....");
+                popUp();
+
+                setListeners();
+
+                m.setText(meaning);
+                m.setVisibility(View.VISIBLE);
+                w.setEnabled(false);
+                w.setTextSize(28);
+                w.setText(word);
+                wm.addView(myView, p);
+            }
+        }
+        else{
+            Log.d("Database22", "Word not found hai...");
+            Toast.makeText(getApplicationContext(),"Word not found",Toast.LENGTH_SHORT).show();
+        }
+
+    }
 
     private void RegPrimaryClipChanged(){
         if(!bHasClipChangedListener){
@@ -116,6 +138,19 @@ public class serviceHandler extends Service {
             bHasClipChangedListener = true;
         }
     }
+
+    private final BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if(action.equals("android.provider.Telephony.SMS_RECEIVED")){
+                //action for sms received
+            }
+            else if(action.equals(android.telephony.TelephonyManager.ACTION_PHONE_STATE_CHANGED)){
+                //action for phone state changed
+            }
+        }
+    };
 
     @Override
     public void onCreate() {
@@ -149,6 +184,12 @@ public class serviceHandler extends Service {
                 }
             }
         });
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("search");
+
+        registerReceiver(receiver, filter);
+
         super.onCreate();
     }
 
@@ -250,6 +291,7 @@ public class serviceHandler extends Service {
 
 
 
+
     @Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
@@ -260,15 +302,34 @@ public class serviceHandler extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Toast.makeText(getApplicationContext(),"Started service",Toast.LENGTH_SHORT).show();
-        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(serviceHandler.this);
-        localBroadcastManager.sendBroadcast(new Intent("com.OSdict.action.close"));
+        boolean isSearch = intent.getBooleanExtra("search",false);
+        //Toast.makeText(getApplicationContext(),"inside service " + isSearch,Toast.LENGTH_SHORT).show();
+        if(isSearch){
+            prefs = getSharedPreferences("com.example.bharath.notify", MODE_PRIVATE);
+            String wod = prefs.getString("WOD","Hi");
+            JSONObject tWOD = null;
+            try {
+                tWOD = new JSONObject(wod);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Iterator<String> keys = tWOD.keys();
+            String str_Name=keys.next();
+            getMeaning("Cress");
+        }else{
+            Toast.makeText(getApplicationContext(),"Started service",Toast.LENGTH_SHORT).show();
+            LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(serviceHandler.this);
+            localBroadcastManager.sendBroadcast(new Intent("com.OSdict.action.close"));
+        }
+
+
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
         UnRegPrimaryClipChanged();
+        unregisterReceiver(receiver);
         super.onDestroy();
     }
 

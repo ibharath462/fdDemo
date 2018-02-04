@@ -76,7 +76,7 @@ public class data extends SQLiteOpenHelper{
         String meaning = "";
         String myPath = DB_PATH + DB_NAME;
         database = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
-        String query = "SELECT * FROM dict where word='" + word + "'";
+        String query = "SELECT * FROM dict where UPPER(word)='" + word + "'";
         Cursor cursor = database.rawQuery(query,null);
         Log.i("Database : ", "" + cursor.toString());
         if((cursor.moveToFirst()) || cursor.getCount() != 0){

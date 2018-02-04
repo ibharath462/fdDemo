@@ -73,6 +73,11 @@ public class NotificationReceiver extends BroadcastReceiver {
         }
         else  if ("Search".equals(action)) {
             Toast.makeText(context, "Searching", Toast.LENGTH_SHORT).show();
+            Intent myIntent = new Intent(context, serviceHandler.class);
+            myIntent.putExtra("search",true);
+            context.startService(myIntent);
+
+
         }
     }
 }
